@@ -26,16 +26,17 @@ jobs:
         run: |
           mkdir app
           unzip -q Ink_and_Garing_Flutter_Mobile_App_Source.zip -d app
-          cd app
+          ls -la app
+          cd app/Ink_Garing_Flutter_Source
           flutter pub get
 
       - name: Build Android APK
         run: |
-          cd app
+          cd app/Ink_Garing_Flutter_Source
           flutter build apk --release
 
       - name: Save APK for download
         uses: actions/upload-artifact@v4
         with:
           name: ink-garing-android-apk
-          path: app/build/app/outputs/flutter-apk/app-release.apk
+          path: app/Ink_Garing_Flutter_Source/build/app/outputs/flutter-apk/app-release.apk
