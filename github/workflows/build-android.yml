@@ -23,40 +23,52 @@ jobs:
         with:
           channel: stable
 
-      - name: Extract and locate Flutter project
+      - name: Find Flutter source ZIP
         shell: bash
         run: |
           ZIP="$(find . -maxdepth 1 -type f -iname '*Flutter*Mobile*Source*.zip' -print -quit)"
+
           if [ -z "$ZIP" ]; then
-            echo "Flutter source ZIP not found."
+            echo "ERROR: Flutter source ZIP not found in repository root."
             ls -la
             exit 1
           fi
 
+          echo "Found source ZIP: $ZIP"
           mkdir -p app
           unzip -q "$ZIP" -d app
 
-          PUBSPEC="$(find app -name pubspec.yaml -print -quit)"
+      - name: Locate Flutter project
+        shell: bash
+        run: |
+          PUBSPEC="$(find app -name pubspec.yaml -type f -print -quit)"
+
           if [ -z "$PUBSPEC" ]; then
-            echo "pubspec.yaml was not found inside the ZIP."
-            find app -maxdepth 4 -type f | head -80
+            echo "ERROR: pubspec.yaml was not found in the extracted ZIP."
+            find app -maxdepth 5 -type f | head -100
             exit 1
           fi
 
           PROJECT_DIR="$(dirname "$PUBSPEC")"
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Found Flutter project at: $PROJECT_DIR"
+          echo "Flutter project located at: $PROJECT_DIR"
 
-      - name: Build Android APK
+      - name: Get dependencies
         shell: bash
         run: |
           cd "$PROJECT_DIR"
           flutter pub get
+
+      - name: Build release APK
+        shell: bash
+        run: |
+          cd "$PROJECT_DIR"
           flutter build apk --release
 
-      - name: Save APK for download
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ink-garing-android-apk
           path: app/**/build/app/outputs/flutter-apk/app-release.apk
-
+          if-no-files-found: error
+          retention-days: 14
