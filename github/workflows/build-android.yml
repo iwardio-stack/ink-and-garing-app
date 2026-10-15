@@ -22,21 +22,31 @@ jobs:
         with:
           channel: stable
 
-      - name: Extract Flutter project
+      - name: Extract and locate Flutter project
         run: |
           mkdir app
           unzip -q Ink_and_Garing_Flutter_Mobile_App_Source.zip -d app
-          ls -la app
-          cd app/Ink_Garing_Flutter_Source
-          flutter pub get
+          PROJECT_DIR="$(find app -name pubspec.yaml -print -quit | xargs dirname)"
+          if [ -z "$PROJECT_DIR" ] || [ ! -f "$PROJECT_DIR/pubspec.yaml" ]; then
+            echo "ERROR: pubspec.yaml was not found in the ZIP."
+            find app -maxdepth 4 -type f | head -80
+            exit 1
+          fi
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Flutter project found at: $PROJECT_DIR"
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+        working-directory: .
 
       - name: Build Android APK
         run: |
-          cd app/Ink_Garing_Flutter_Source
+          cd "$PROJECT_DIR"
+          flutter pub get
           flutter build apk --release
 
       - name: Save APK for download
         uses: actions/upload-artifact@v4
         with:
           name: ink-garing-android-apk
-          path: app/Ink_Garing_Flutter_Source/build/app/outputs/flutter-apk/app-release.apk
+          path: app/**/build/app/outputs/flutter-apk/app-release.apk
