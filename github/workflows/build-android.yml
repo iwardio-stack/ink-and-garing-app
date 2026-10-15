@@ -27,7 +27,6 @@ jobs:
         shell: bash
         run: |
           ZIP="$(find . -maxdepth 1 -type f -iname '*Flutter*Mobile*Source*.zip' -print -quit)"
-
           if [ -z "$ZIP" ]; then
             echo "Flutter source ZIP not found."
             ls -la
@@ -38,7 +37,6 @@ jobs:
           unzip -q "$ZIP" -d app
 
           PUBSPEC="$(find app -name pubspec.yaml -print -quit)"
-
           if [ -z "$PUBSPEC" ]; then
             echo "pubspec.yaml was not found inside the ZIP."
             find app -maxdepth 4 -type f | head -80
@@ -49,7 +47,7 @@ jobs:
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
           echo "Found Flutter project at: $PROJECT_DIR"
 
-      - name: Get dependencies and build APK
+      - name: Build Android APK
         shell: bash
         run: |
           cd "$PROJECT_DIR"
